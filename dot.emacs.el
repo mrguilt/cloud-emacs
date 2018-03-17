@@ -1,7 +1,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;Shared dot-emacs
+;;; Shared dot-emacs
 ;;;
-;;;This is the .emacs file that will be shared among all systems. 
+;;; This is the .emacs file that will be shared among all systems. 
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -19,7 +19,6 @@
 ;;;
 ;;; Remote Systems
 ;;; ------ -------
-;;; AWS Server ("spectr-temp" in DNS)="ip-172-31-128-206.ec2.internal"
 ;;; Google Cloud Server ("spectr" in DNS)="ip-172-31-128-206-b897bb0a.c.promising-howl-161512.internal"
 ;;; SDF Free UNIX="sdf", "faeroes", "iceland", "miku", "otaku", and  
 ;;;               "norge" (round robin assignment at login to tty.sdf.org)
@@ -27,7 +26,7 @@
 ;;; Tilde.Town="tilde.town"
 ;;; grex.org="grex.org"
 ;;;
-;;; Cloud Directoy is currently on Box.com. (2017-07-27)
+;;; Cloud Directory is currently on Box.com. (2017-07-27)
 ;;; SDF and hashbang do not support Cloud Directory.
 
 (print "We're kicked off dot.emacs.el!")
@@ -39,7 +38,8 @@
 (print (concat "System Name: " system-name))
 (print system-type)
 (print (concat "EMACS Version: " emacs-version))
-(print "dot.emacs.el file last updated 2018-01-25.")
+(print user-real-login-name)
+(print "dot.emacs.el file last updated 2018-03-12.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; In an effort for "one dot-emacs to rule them all," I'm creating a
@@ -51,22 +51,34 @@
 (defvar clouddir-packages-available t
   "Works with my model of storing elisp, et al., in the cloud. Tests in scripts (such as dot.emacs) can incldue or exclude based on that. Default is true.")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Creating an insert-signature command of my own design. Setting
-;;; a default here, but making it such that it can change based on machine.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar sigfile "~/.signature"
 	"Location and name of the signature file on the machine. Default is ~/.signature")
 
-;;; The actual sign-it command. 
-(defun sign-it ()
-  "Insert a signature file at the end of the buffer."
-  (interactive)
-  (goto-char (point-max))
-  (insert "\n")
-  (insert-file sigfile)
-  (goto-char (point-min))
-)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;			    Default Values
+;;; These are "default unless I say otherwise." So, if I fire up EMACS, it
+;;; will use these values, unless it's reset in a machine-specific section.
+;;; Spelling Stuff
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Spelling Stuff
+;;; Setting spellcheck to aspell, since it seems to be more commonly
+;;; available in all cases. Hunspell will be put where appropriate.
+;;;(setq ispell-program-name "hunspell")
+(setq ispell-program-name "aspell")
+(global-set-key (kbd "C-<f8>") 'flyspell-check-previous-highlighted-word)
+
+;;; I don't want backup files.
+(setq make-backup-files nil)
+
+;;;Upcase Region FTW
+(put 'upcase-region 'disabled nil)
+
+;;;Downcase Region FTW
+(put 'downcase-region 'disabled nil)
+
+;;;Stop the startup screen. This was set in a local .emacs, but I REALLY 
+;;;don't want to see it. Like, ever.
+(setq inhibit-startup-screen t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Platform-specific check. These can be overwritten per machine if need
@@ -77,6 +89,7 @@
     (print "Windows system")
 ;mulit-term doesn't seem to want to work in windows. still thinking about it.
     (setq shellprog "C:/windows/system32/cmd.exe")
+    (add-to-list 'exec-path "C:/Program Files (x86)/Aspell/bin/")
     )
   
   (progn
@@ -147,16 +160,19 @@
 ;;; 	    (set-face-attribute 'default nil :font "Consolas")
 	    (set-background-color "#A9F5A9")
 	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (120%). 
+	    (setq ispell-program-name "hunspell")
 	    ))
+      
       ;;; Things for Kingswood (HP Omen)
 ;;;      (if (string= system-name (or "kingswood" "KINGSWOODW"))
       (if (or (string= system-name "kingswood") (string= system-name "KINGSWOODW"))
 	  (progn
 	    (print "It's Kingswood!")
+;;;	    (set-face-attribute 'default nil :font "Noto Sans Mono CJK TC Regular")
 	    (set-face-attribute 'default nil :font "Liberation Mono")
-;;;	    (set-face-attribute 'default nil :font "DEC Terminal Modern")
 	    (set-face-attribute 'default (selected-frame) :height 150) ;;;Make the typeface a bit bigger (150%). 	    
 	    (set-background-color "#fcf8e1")
+      	    (setq ispell-program-name "hunspell")
 	    ))
       )
 ;;; else 
@@ -169,13 +185,21 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Machine-Specific terminal stuff
-	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	  ;;; AWS Spectr-Temp (old mail server)
-	  (if (string= system-name "ip-172-31-128-206.ec2.internal")
+
+ 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	  ;;; kingswood
+	  (if (string= system-name "kingswood")
 	  (progn
-	    (print "AWS System IN THE CLOUD!")
-	    ;; disable color highlighting (for now)--makes things confussing.
-	    (global-font-lock-mode 0)
+	    (print "Kingswood (HP Omen Laptop), in the Terminal")
+	    (setq ispell-program-name "hunspell")
+	    ))
+
+ 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	  ;;; "squip"
+	  (if (string= system-name "squip")
+	  (progn
+	    (print "Squip (Raspberry Pi Utility System), in the Terminal")
+	    (setq ispell-program-name "hunspell")
 	    ))
 
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -183,7 +207,8 @@
 	  (if (string= system-name "ip-172-31-128-206-b897bb0a.c.promising-howl-161512.internal")
 	  (progn
 	    (print "Google Cloud system (specr.mrguilt.com).")
-          ))
+
+	    ))
 
 
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -204,6 +229,8 @@
             ;;; This doesn't work with cloud drive, so swap the variable.
 	    (setq clouddir-packages-available 'nil)
 	    (add-to-list 'load-path "~/emacs.d")
+	    ;;;My personal functions--copied locally
+	    (load-library "icb-functions")
 	    )
 	  )
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -240,20 +267,15 @@
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Setting Various Environment Variables
+;;; Special Stuff for root
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; I don't want backup files.
-(setq make-backup-files nil)
-
-;;;Upcase Region FTW
-(put 'upcase-region 'disabled nil)
-
-;;;Downcase Region FTW
-(put 'downcase-region 'disabled nil)
-
-;;;Stop the startup screen. This was set in a local .emacs, but I REALLY 
-;;;don't want to see it. Like, ever.
-(setq inhibit-startup-screen t)
+(if (string= user-real-login-name "root")
+    (progn
+      (print "root user!")
+      (set-background-color "#FFCCF8")
+      (setq clouddir-packages-available 'nil)
+     )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Loading general Modes
@@ -285,8 +307,12 @@
 
 ;;;Set Up Atomic Chrome
       (require 'atomic-chrome)
+      ;;;Atomic Chrome default is text mode. I prefer visaul line mode.
+;;;      (setq atomic-chrome-default-major-mode 'visual-line-mode)
       (atomic-chrome-start-server)
-      
+
+;;;My personal functions
+      (load-library "icb-functions")
       ;;; End True
       )
   ;;; else
@@ -374,12 +400,29 @@
 ;;;            to put it on SDF)
 ;;;2017-10-25: Added Tilde.Town
 ;;;2017-12-24: Added grex.org and wintermute (well, wintermute was added
-;;;            a while ago, but I neglected to notte it here. 
-;;;2018-01-08: Added wraith.
+;;;            a while ago, but I neglected to note it here. 
 ;;;2018-01-25: Set up Neotree. 
 ;;;2018-01-30: Set up Simplenote2
 ;;;2018-01-31: Set up Atomic Chrome
-
+;;;2018-02-10: 1. Moved functions I wrote into icb-functions.el. Only 
+;;;               catch is that the sigfile variable must be defined
+;;;               here.
+;;;            2. Set Atomic Chrome to default to visual-line-mode.
+;;;            3. Removed spectr-temp (AWS)
+;;;2018-03-12: 1. Set up spell checking!
+;;;            2. Moved variables to the top. This will allow them to be
+;;;               reset on a machine-by-machine basis if necessary.
+;;;            3. Created case for Squip-in-terminal. How did I not already
+;;;               have that?
+;;;2018-03-13: 1. Set spell checking variable for grex, SDF, and tilde.town.
+;;;               This has me questioning my defaults approach: should the
+;;;               default be the preferred approach, or the exceptional
+;;;               approach? 
+;;;2018-03-14: 1. For the above: decided to go the route of setting default
+;;;               to most common case (aspell), and setting the preferred
+;;;               one (hunspell) where appropriate. This is more in keeping
+;;;               with the philosopy of this shared .emacs.
+;;;            2. Created case for Kingswood-in-terminal.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;			     HOLDING ZONE
 ;;;
@@ -388,7 +431,8 @@
 ;;;as I might be interested in it for some reason or another.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;;BIC "Best IMAP Client." Not so much.
+					;
+;;BIC "Best IMAP Client." Not so much.
 ;;;https://github.com/legoscia/bic
 ;;;
 ;;;(add-to-list 'load-path (concat cloud-dir "/bic-master"))
