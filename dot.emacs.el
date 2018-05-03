@@ -39,7 +39,7 @@
 (print system-type)
 (print (concat "EMACS Version: " emacs-version))
 (print user-real-login-name)
-(print "dot.emacs.el file last updated 2018-03-12.")
+(print "dot.emacs.el file last updated 2018-04-30.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; In an effort for "one dot-emacs to rule them all," I'm creating a
@@ -147,7 +147,10 @@
 	    (print "It's the WorkTop!")
 	    (set-face-attribute 'default nil :font "Consolas")		    
 	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (120%). 
-	    (set-background-color "#FFFFCC")
+;;;	    (set-background-color "#FFFFCC")
+;;;	    (set-background-color "#d4dffc")
+	    ;;;Trying a Theme
+	    (load-library "WordPerfect-Theme.el")
 	    (cd "c:/Users/i.charles.barilleaux/Box Sync/")
 	    (setq sigfile "~/signature.txt")
 	    ))
@@ -169,8 +172,9 @@
 	  (progn
 	    (print "It's Kingswood!")
 ;;;	    (set-face-attribute 'default nil :font "Noto Sans Mono CJK TC Regular")
-	    (set-face-attribute 'default nil :font "Liberation Mono")
-	    (set-face-attribute 'default (selected-frame) :height 150) ;;;Make the typeface a bit bigger (150%). 	    
+;;;	    (set-face-attribute 'default nil :font "Liberation Mono")
+	    (set-face-attribute 'default nil :font "Hack")
+	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (150%). 	    
 	    (set-background-color "#fcf8e1")
       	    (setq ispell-program-name "hunspell")
 	    ))
@@ -204,7 +208,8 @@
 
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	  ;;; spectr
-	  (if (string= system-name "ip-172-31-128-206-b897bb0a.c.promising-howl-161512.internal")
+;;;	  (if (string= system-name "ip-172-31-128-206-b897bb0a.c.promising-howl-161512.internal")
+	  (if (string= system-name "instance-2")
 	  (progn
 	    (print "Google Cloud system (specr.mrguilt.com).")
 
@@ -307,13 +312,16 @@
 
 ;;;Set Up Atomic Chrome
       (require 'atomic-chrome)
-      ;;;Atomic Chrome default is text mode. I prefer visaul line mode.
-;;;      (setq atomic-chrome-default-major-mode 'visual-line-mode)
       (atomic-chrome-start-server)
 
+;;;Toodledo
+ (require 'org-toodledo)
+ (setq org-toodledo-userid "mrguilt")
+      
 ;;;My personal functions
       (load-library "icb-functions")
       ;;; End True
+
       )
   ;;; else
   (progn
@@ -322,12 +330,17 @@
       )
 )
 
+;;;Start spellcheck in visual line mode.
+(add-hook 'visual-line-mode-hook 'flyspell-mode)
+
 ;;;Markdown Mode!
 (autoload 'markdown-mode "markdown-mode"
   "Major mode for editing Markdown files" t)
 (autoload 'gfm-mode "markdown-mode"
    "Major mode for editing GitHub Flavored Markdown files" t)
-
+;;;When I start Markdown Mode, I want visual wrapping and spell check.
+(add-hook 'markdown-mode-hook 'visual-line-mode)
+(add-hook 'markdown-mode-hook 'flyspell-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; File Extensions
@@ -343,17 +356,21 @@
 (setq auto-mode-alist (cons '("snd\.*" . visual-line-mode) auto-mode-alist))
 (setq auto-mode-alist (cons '("mutt*" . visual-line-mode) auto-mode-alist))
 
-;;;Number some lines! This seems to prevent going into the mode for the
-;programming language. Putting a pin in that. 
-;(setq auto-mode-alist (cons '("\.pl" . linum-mode) auto-mode-alist))
-;(setq auto-mode-alist (cons '("\.html" . linum-mode) auto-mode-alist))
-;(setq auto-mode-alist (cons '("\.el" lisp-mode linum-mode) auto-mode-alist))
-;(setq auto-mode-alist (cons '("\.sh" . linum-mode) auto-mode-alist))
-
 ;;; Markdown Mode
 (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
 (add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Documentation in Messages Buffer
+;;;
+;;; 'Cause I keep forgetting some mappings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(print "Stuff I set up but forget:\n")
+(print "\tF8\tNeoTree file browser\n")
+(print "\tC-F8\tFlyspell Offer Suggestions\n")
+(print "\tM-x epa-*\tEasy GPG Stuff\n")
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;END OF CODE;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -423,6 +440,12 @@
 ;;;               one (hunspell) where appropriate. This is more in keeping
 ;;;               with the philosopy of this shared .emacs.
 ;;;            2. Created case for Kingswood-in-terminal.
+;;;2018-04-27: 1. Set it up so entering markdown-mode also starts
+;;;               visual-line-mode and flyspell-mode.
+;;;            2. Set it up so entering visual-line-mode also starts
+;;;               flyspell-mode.
+;;;2018-05-03: 1. Created a bit of documentation.
+;;;            2. Changed background color for WorkTop.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;			     HOLDING ZONE
 ;;;
