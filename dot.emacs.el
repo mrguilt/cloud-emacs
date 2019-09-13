@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Shared dot-emacs
 ;;;
 ;;; This is the .emacs file that will be shared among all systems. 
@@ -12,19 +12,20 @@
 ;;;
 ;;; Personal/Local Systems
 ;;; -------------- -------
-;;; WorkTop Hostname=CPX-0QIOUDXB0GL (2017-07-24)
+;;; WorkTop Hostname=CPX-T3716HB1N83 (2019-05-17)
 ;;; New HP laptop="kingswood"
-;;; Windows VM on MacBook="SERVAL"
 ;;; Raspberry Pi Zero="squip"
+;;; Virtual Windows System="TARS"
 ;;;
 ;;; Remote Systems
 ;;; ------ -------
-;;; Google Cloud Server ("spectr" in DNS)="ip-172-31-128-206-b897bb0a.c.promising-howl-161512.internal"
+;;; Google Cloud Server ("spectr" in DNS)="instance-4"
 ;;; SDF Free UNIX="sdf", "faeroes", "iceland", "miku", "otaku", and  
 ;;;               "norge" (round robin assignment at login to tty.sdf.org)
 ;;; hashbang="da1.hashbang.sh"
 ;;; Tilde.Town="tilde.town"
 ;;; grex.org="grex.org"
+;;; Republic="republic.circumlunar.space"
 ;;;
 ;;; Cloud Directory is currently on Box.com. (2017-07-27)
 ;;; SDF and hashbang do not support Cloud Directory.
@@ -39,7 +40,72 @@
 (print system-type)
 (print (concat "EMACS Version: " emacs-version))
 (print user-real-login-name)
-(print "dot.emacs.el file last updated 2018-04-30.")
+(print "dot.emacs.el file last updated 2019-09-11.")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Test if cloud directories are avaialble.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar clouddir-packages-available t
+  "Works with my model of storing elisp, et al., in the cloud. Tests in scripts (such as dot.emacs) can incldue or exclude based on that. Default is true.")
+
+;;;Are there cloud directories? The check is for nil, or for ~.
+(if (not (boundp `cloud-dir))
+    (setq clouddir-packages-available 'nil)
+  (progn
+    (if (string= cloud-dir "~")
+	(setq clouddir-packages-available 'nil)
+      )
+    ))
+
+;;;I also don't want cloud directories loaded for root.
+ (if (string= user-real-login-name "root")
+     (setq clouddir-packages-available 'nil)
+   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Loading General Modes, Part 1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; This space would be for ones that come with EMACS by default.
+;;; These would be if the cloud directory is available.
+  
+;;; These are modes that I install myself. Need to test to see if the
+;;; specific machine supports them.
+(if clouddir-packages-available
+    (progn
+      (message "Cloud Directory Packages are available.")
+
+;;;Toodledo
+;;; (require 'org-toodledo)
+;;; (setq org-toodledo-userid "mrguilt@gmail.com")
+;;; (setq org-toodledo-password "")
+      
+;;;My personal functions
+      (load-library "icb-functions")
+      ;;; End True
+
+;;;There are some packages that only make sense in a GUI, especially if
+;;;I'm connecting in via an SSH type session. So, I'm only going to run them
+;;;GUI mode.
+;;;
+;;;I recognize there is a GUI test when assigning machine-stuff. However,
+;;;those actions should apply regardless as to whether the cloud packages
+;;;are available. 
+      (if (display-graphic-p)
+	  (progn
+	    (print "GUI Cloud Packages Loading...")
+;;;Set Up Atomic Chrome
+	    (require 'atomic-chrome)
+	    (atomic-chrome-start-server)
+	    )
+      )
+      )
+  ;;; else
+  (progn
+      (message "Cloud Directory Packages are NOT available.")
+;;; end else
+      )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; In an effort for "one dot-emacs to rule them all," I'm creating a
@@ -47,12 +113,16 @@
 ;;; most systems will either be referencing the cloud directory on box
 ;;; (or other provider as I see fit), or I'll be able to install packages
 ;;; locally (and replicate dot.emacs as needed).
+;;;
+;;; sigfile and tempword need to be defined in the icb-functions.el, but I
+;;; would need to load that before the machine-specific test. I'm going to
+;;; try it at some point. 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar clouddir-packages-available t
-  "Works with my model of storing elisp, et al., in the cloud. Tests in scripts (such as dot.emacs) can incldue or exclude based on that. Default is true.")
-
 (defvar sigfile "~/.signature"
-	"Location and name of the signature file on the machine. Default is ~/.signature")
+  "Location and name of the signature file on the machine. Default is ~/.signature")
+
+(defvar tempword "~/tempword-markdown.docx"
+  "Location and name of a temporary file to dump conversion of markdown to word. Default is ~/tempword-markdown.docx")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;			    Default Values
@@ -65,15 +135,26 @@
 ;;; available in all cases. Hunspell will be put where appropriate.
 ;;;(setq ispell-program-name "hunspell")
 (setq ispell-program-name "aspell")
-(global-set-key (kbd "C-<f8>") 'flyspell-check-previous-highlighted-word)
+(global-set-key (kbd "<f8>") 'flyspell-check-previous-highlighted-word)
 
 ;;; I don't want backup files.
 (setq make-backup-files nil)
 
-;;;Upcase Region FTW
-(put 'upcase-region 'disabled nil)
+;;; Default autosave interval is 300 characters. Not bad for coding, but
+;;; annoying for general typing. Setting it to 2500 characters.
+(setq auto-save-interval 2500)
 
-;;;Downcase Region FTW
+;;; Put the auto-save files in the temp directory. I was originally going
+;;; to do this just for the WorkTop, but I like the idea of making it
+;;; standard. 
+(setq backup-directory-alist
+      `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms
+      `((".*" ,temporary-file-directory t)))
+
+
+;;;Upcase and Downcase Region FTW
+(put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
 ;;;Stop the startup screen. This was set in a local .emacs, but I REALLY 
@@ -142,19 +223,47 @@
       
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;;; Things for the WorkTop
-      (if (string= system-name "CPX-0QIOUDXB0GL")
+      (if (string= system-name "CPX-T3716HB1N83")
 	  (progn
 	    (print "It's the WorkTop!")
-	    (set-face-attribute 'default nil :font "Consolas")		    
-	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (120%). 
-;;;	    (set-background-color "#FFFFCC")
-;;;	    (set-background-color "#d4dffc")
-	    ;;;Trying a Theme
-	    (load-library "WordPerfect-Theme.el")
-	    (cd "c:/Users/i.charles.barilleaux/Box Sync/")
+;;;	    (set-face-attribute 'default nil :font "Cousine")
+;;;	    (set-face-attribute 'default nil :font "CourierPrime")
+;;;	    (set-face-attribute 'default nil :font "IBM Plex Mono")
+	    (set-face-attribute 'default (selected-frame) :height 120) ;;;Make the typeface a bit bigger (120%). 
+	    (setq machine-font "IBM Plex Mono")
+	    (set-background-color "#d6e5ff")	    
+      	    (setq ispell-program-name "hunspell")
+	    (cd "c:/Users/i.charles.barilleaux/box sync/")
 	    (setq sigfile "~/signature.txt")
+
+	    (setq tempword "c:\\users\\i.charles.barilleaux\\temp-markdown.docx")
+	    ;;; Lock Files were hurting OneDrive. Turning it off just on the
+	    ;;; WorkTop, as I'm not 100% sure of the implications. 
+	    (setq create-lockfiles nil)
+
 	    ))
 
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      ;;; Things for the Virtual Windows System
+      (if (string= system-name "TARS")
+	  (progn
+	    (print "It's a Windows VM!")
+	    (set-face-attribute 'default nil :font "Cousine")
+	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (120%).
+	    (setq machine-font "Cousine")
+	    (set-background-color "#ffca60")
+      	    (setq ispell-program-name "hunspell")
+	    (cd "~")
+	    (setq sigfile "~/signature.txt")
+
+	    ;;; Lock Files were hurting OneDrive. Turning it off just on the
+	    ;;; WorkTop, as I'm not 100% sure of the implications. 
+;;;	    (setq create-lockfiles nil) ;;;commenint gout on TARS as it's not
+	                                ;;;the WorkTop. Plus I want to see
+	                                ;;;if it's a work issue or not.
+
+	    ))
+      
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;;; Things for the Raspberry Pi (squip)
       (if (string= system-name "squip")
@@ -164,6 +273,7 @@
 	    (set-background-color "#A9F5A9")
 	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (120%). 
 	    (setq ispell-program-name "hunspell")
+	    (setq tempword "~/box/documents/temp-markdown.docx")
 	    ))
       
       ;;; Things for Kingswood (HP Omen)
@@ -171,13 +281,15 @@
       (if (or (string= system-name "kingswood") (string= system-name "KINGSWOODW"))
 	  (progn
 	    (print "It's Kingswood!")
-;;;	    (set-face-attribute 'default nil :font "Noto Sans Mono CJK TC Regular")
 ;;;	    (set-face-attribute 'default nil :font "Liberation Mono")
-	    (set-face-attribute 'default nil :font "Hack")
-	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (150%). 	    
+;;;	    (Set-face-attribute 'default nil :font "Roboto Mono")
+	    (set-face-attribute 'default (selected-frame) :height 150) ;;;Make the typeface a bit bigger (150%).
+	    (setq machine-font "Roboto Mono")
 	    (set-background-color "#fcf8e1")
       	    (setq ispell-program-name "hunspell")
 	    ))
+;;; GUI stuff after machine stuff--probably based on items in the machine-specific sections
+      (set-face-attribute 'default nil :font machine-font)
       )
 ;;; else 
 ;;; Things for terminal mode
@@ -204,17 +316,16 @@
 	  (progn
 	    (print "Squip (Raspberry Pi Utility System), in the Terminal")
 	    (setq ispell-program-name "hunspell")
+      	    (setq tempword "~/box/documents/temp-markdown.docx")
 	    ))
 
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	  ;;; spectr
-;;;	  (if (string= system-name "ip-172-31-128-206-b897bb0a.c.promising-howl-161512.internal")
-	  (if (string= system-name "instance-2")
+	  (if (string= system-name "instance-4")
 	  (progn
 	    (print "Google Cloud system (specr.mrguilt.com).")
 
 	    ))
-
 
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	  ;;; Wintermute, the "Floating" Pi Zero
@@ -224,7 +335,6 @@
 	    ;; disable color highlighting (for now)--makes things confussing.
 	    (global-font-lock-mode 0)
 	    ))
-
 
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	  ;;; SDF, which doesn't support cloud drives.
@@ -236,6 +346,9 @@
 	    (add-to-list 'load-path "~/emacs.d")
 	    ;;;My personal functions--copied locally
 	    (load-library "icb-functions")
+	    ;;;Change key binding so backspace and DEL work as expected.
+	    (global-set-key "\C-d" 'backward-delete-char-untabify)
+	    (global-set-key [delete] 'delete-char)
 	    )
 	  )
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -248,6 +361,17 @@
 	    (add-to-list 'load-path "~/emacs.d")
 	    ))
 
+	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	  ;;; republic.circumlunar.space
+	  (if (string= system-name "republic.circumlunar.space")
+	  (progn
+	    (print "Republic System")
+            ;;; This doesn't work with cloud drive, so swap the variable.
+	    (setq clouddir-packages-available 'nil)
+	    (add-to-list 'load-path "~/emacs.d")
+	    ))
+
+	  
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	  ;;; Tilde.Town
 	  (if (string= system-name "tilde.town")
@@ -273,6 +397,10 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Special Stuff for root
+;;;
+;;; Basically, I wanted to have a distinct color, and I didn't want all the
+;;; cloud packages (typically, I'm editing a config file, not doing crazy
+;;; stuff). 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (if (string= user-real-login-name "root")
     (progn
@@ -283,52 +411,8 @@
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Loading general Modes
+;;; Loading General Modes, Part 2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; This space would be for ones that come with EMACS by default.
-
-;;; These are modes that I install myself. Need to test to see if the
-;;; specific machine supports them.
-(if clouddir-packages-available
-    (progn
-      (message "Cloud Directory Packages are available.")
-
-;;;Set Up Multi-Term
-      (require 'multi-term)
-      (setq multi-term-program shellprog)
-
-;;;Set Up Neotree
-      (setq neotreedir (concat cloud-dir "/neotree"))
-      (add-to-list 'load-path neotreedir)
-      (require 'neotree)
-      (global-set-key [f8] 'neotree-toggle)
-
-;;;Set Up Simplenote2
-      (require 'simplenote2)
-      (setq simplenote2-email "charles@mrguilt.com")
-      (setq simplenote2-password nil)
-      (simplenote2-setup)
-
-;;;Set Up Atomic Chrome
-      (require 'atomic-chrome)
-      (atomic-chrome-start-server)
-
-;;;Toodledo
- (require 'org-toodledo)
- (setq org-toodledo-userid "mrguilt")
-      
-;;;My personal functions
-      (load-library "icb-functions")
-      ;;; End True
-
-      )
-  ;;; else
-  (progn
-      (message "Cloud Directory Packages are NOT available.")
-;;; end else
-      )
-)
 
 ;;;Start spellcheck in visual line mode.
 (add-hook 'visual-line-mode-hook 'flyspell-mode)
@@ -342,6 +426,13 @@
 (add-hook 'markdown-mode-hook 'visual-line-mode)
 (add-hook 'markdown-mode-hook 'flyspell-mode)
 
+;;;When I start HTML Mode, I want visual wrapping and spell check.
+(add-hook 'html-mode-hook 'visual-line-mode)
+(add-hook 'html-mode-hook 'flyspell-mode)
+
+;;;I can't think of when I wouldn't want visual line mode without spell check. 
+(add-hook 'visual-line-mode-hook 'flyspell-mode)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; File Extensions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -349,7 +440,6 @@
 ;;; 2016-12-09 Updated to use modern "visual-line-mode" instead of
 ;;;            "longlines-mode"
 (setq auto-mode-alist (cons '("\.txt" . visual-line-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\.html" . visual-line-mode) auto-mode-alist))
 
 ;;;Longline mode for files in the form "snd.", as happens in mail out of
 ;;;elm (SDF). Also, "mutt..." for the mutt client.
@@ -361,15 +451,51 @@
 (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
 (add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
 
+;;; HTML Mode
+(add-to-list 'auto-mode-alist '("\\.html\\'" . html-mode))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Setting Up E-Mail
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;Big Variables. I'm settig this up for my mail server.
+(setq user-full-name "I. Charles Barilleaux")
+(setq user-mail-address "Charles@MrGuilt.com")
+
+;;;Puts visual-line-mode on when you start sending mail. 
+(add-hook 'mail-mode-hook #'visual-line-mode)
+(add-hook 'message-mode-hook #'visual-line-mode)
+
+;;; Outbound Mail stuff
+(setq smtpmail-default-smtp-server "spectr.mrguilt.com"
+       smtpmail-local-domain "mrguilt.com")
+(load-library "smtpmail")
+
+(setq send-mail-function 'smtpmail-send-it)
+(setq message-send-mail-function 'smtpmail-send-it)
+(setq send-mail-function    'smtpmail-send-it
+      smtpmail-smtp-server  "spectr.mrguilt.com"
+      smtpmail-stream-type  'ssl
+      smtpmail-smtp-service 465)
+
+;;;Read Mail with GNUS
+(setq gnus-select-method 
+      '(nnimap "mrguilt.com"
+	       (nnimap-address "spectr.mrguilt.com")
+	       (nnimap-server-port 993)
+	       (nnimap-stream ssl)
+;;;              (nnimap-authinfo-file "~/.authinfo")
+))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Documentation in Messages Buffer
 ;;;
 ;;; 'Cause I keep forgetting some mappings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (print "Stuff I set up but forget:\n")
-(print "\tF8\tNeoTree file browser\n")
-(print "\tC-F8\tFlyspell Offer Suggestions\n")
-(print "\tM-x epa-*\tEasy GPG Stuff\n")
+(print "\tF8\tFlyspell Offer Suggestions")
+(print "\tM-x epa-*\tEasy GPG Stuff")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;END OF CODE;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -446,7 +572,54 @@
 ;;;               flyspell-mode.
 ;;;2018-05-03: 1. Created a bit of documentation.
 ;;;            2. Changed background color for WorkTop.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;2018-07-22: 1. Reset the autosave interval to 2500 characters.
+;;;            2. Changed Kingswood font to Roboto Mono. Kinda dig it. 
+;;;2018-08-16: 1. Updated WorkTop to use Hunspell. Too easy--why didn't
+;;;               I do it sooner?
+;;;            2. Flipped some keys: F8 does Flyspell; C-F8 does Neotree
+;;;               (though I may remove Neotree). 
+;;;            3. Took out org-toodledo. I haven't used org-mode, so I
+;;;               want to remove the overhead. 
+;;;2018-08-18: 1. Set up outbound mail stuff (mrguilt.com)
+;;;            2. Set up GNUS to read mail.
+;;;            3. Added hooks to do visual line mode for mail windows.
+;;;2018-08-20: 1. Added a test to only load packages that interact with the
+;;;               GUI, like Atomic Chrome, when using a GUI version.
+;;;            2. I have yet to use Multi-Term. So I removed it.
+;;;2018-09-12: 1. Officially gave up on NeoTree. Nothing wrong with it;
+;;;               I just wasn't using it. 
+;;;2018-10-05: 1. Set it to put autosave files in the temp directory. 
+;;;            2. Turned off lock files on the WorkTop. Didn't do it
+;;;               globally, as I'm not 100% sure of the implications. I
+;;;               think OneDrive doesn't like files that use the hash
+;;;               character. 
+;;;2018-10-23: 1. Modified key bindings for SDF so backspace and del work
+;;;               as expected.
+;;;2018-11-30: 1. Playing with fonts on the WorkTop
+;;;2018-12-14: 1. Updated code for new Google Cloud instance
+;;;2018-12-23: 1. Added a Windows VM I use at home, "TARS."
+;;;2019-01-07: 1. Trying out CourierPrime on the WorkTop
+;;;            2. Going to try a light-blue background there, too. 
+;;;2019-01-10: 1. Added republic.circumlunar.space
+;;;2019-04-11: 1. Set "tempword" variable for WordTop.
+;;;2019-05-17: 1. New WorkTop. Who dis?
+;;;            2. Removed the Mac Mini
+;;;2019-08-22: 1. New WorkTop font (Plex Mono)
+;;;2019-09-04: 1. Added hooks for HTML mode.
+;;;            2. Set it so visual line mode always got spell checked.
+;;;2019-09-05: 1. Created machine-font variable. Will eventually just have one
+;;;               set-face-attribute for font.
+;;;            2. Set WorkTop to use the machine-font variable rather than
+;;;               setting in the if-then.
+;;;            3. Set Kingswood to use the machine-font variable rather than
+;;;               setting in the if-then.
+;;;2019-09-06: 1. Better definition of tempword, with default
+;;;            2. Set tempword variable for squip.
+;;;            3. Got rid of SimpleNote. 
+;;;2019-09-11: 1. Switching to the beta. This puts a test for cloud directories
+;;;               at the front. The goal is to allow some modules to load prior to
+;;;               machine tests. 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;			     HOLDING ZONE
 ;;;
 ;;;This is for bits of code, modules, etc., I tried, didn't work out
@@ -455,8 +628,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 					;
-;;BIC "Best IMAP Client." Not so much.
-;;;https://github.com/legoscia/bic
+;;;Set Up Neotree
+;;;This puts a tree file manager when you press a hot key. I never used it.
+;;;      (setq neotreedir (concat cloud-dir "/neotree"))
+;;;      (add-to-list 'load-path neotreedir)
+;;;      (require 'neotree)
+;;;      (global-set-key (kbd "C-<f8>") 'neotree-toggle)
 ;;;
-;;;(add-to-list 'load-path (concat cloud-dir "/bic-master"))
-;;;(require 'bic)
+;;;Documentation
+;;;(print "\tC-F8\tNeoTree file browser")
+
+;;;Set Up Simplenote2
+;;;      (require 'simplenote2)
+;;;      (setq simplenote2-email nil)
+;;;      (setq simplenote2-password nil)
+;;;      (setq simplenote2-markdown-notes-mode `markdown-mode)
+;;;      (simplenote2-setup)
+      
