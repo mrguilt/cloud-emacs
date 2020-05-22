@@ -12,16 +12,17 @@
 ;;;
 ;;; Personal/Local Systems
 ;;; -------------- -------
-;;; WorkTop Hostname=CPX-T3716HB1N83 (2019-05-17)
-;;; New HP laptop="kingswood"
+;;; New MacBook Pro="kingswood"
 ;;; Raspberry Pi Zero="squip"
 ;;; Virtual Windows System="TARS"
 ;;;
 ;;; Remote Systems
 ;;; ------ -------
 ;;; Google Cloud Server ("spectr" in DNS)="instance-4"
-;;; SDF Free UNIX="sdf", "faeroes", "iceland", "miku", "otaku", and  
-;;;               "norge" (round robin assignment at login to tty.sdf.org)
+;;; SDF Free UNIX="sdf", "faeroes", "iceland", "miku", "otaku", "rie", 
+;;;               "sverige" and "norge" (round robin assignment at login
+;;;               to tty.sdf.org)
+;;; SDF MetaAaray="ma.sdf.org"
 ;;; hashbang="da1.hashbang.sh"
 ;;; Tilde.Town="tilde.town"
 ;;; grex.org="grex.org"
@@ -40,7 +41,7 @@
 (print system-type)
 (print (concat "EMACS Version: " emacs-version))
 (print user-real-login-name)
-(print "dot.emacs.el file last updated 2019-09-11.")
+(print "dot.emacs.el file last updated 2020-05-05.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Test if cloud directories are avaialble.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -74,16 +75,33 @@
 (if clouddir-packages-available
     (progn
       (message "Cloud Directory Packages are available.")
-
-;;;Toodledo
-;;; (require 'org-toodledo)
-;;; (setq org-toodledo-userid "mrguilt@gmail.com")
-;;; (setq org-toodledo-password "")
       
 ;;;My personal functions
       (load-library "icb-functions")
       ;;; End True
 
+;;;Load basic-mode and configure
+      (autoload 'basic-mode "basic-mode" "Major mode for editing BASIC code." t)
+      (add-to-list 'auto-mode-alist '("\\.bas\\'" . basic-mode))
+      (setq basic-auto-number 10)
+      (setq basic-line-number-cols 1)
+      
+;;;Set Up Simplenote2
+     (require 'simplenote2)
+     (setq simplenote2-email nil)
+     (setq simplenote2-password nil)
+     (setq simplenote2-markdown-notes-mode `markdown-mode)
+     (simplenote2-setup)
+
+     ;;;Default: Markdown on. C-u M-x simplenote2-set-markdown to turn off. I may set tags as well. 
+     (add-hook 'simplenote2-create-note-hook
+	  (lambda ()
+	    (simplenote2-set-markdown)
+;;;	    (simplenote2-add-tag "tag1")
+	    ))
+    ;;;Nyan Mode, for the LOLs.
+    (load-library "nyan-mode")
+     
 ;;;There are some packages that only make sense in a GUI, especially if
 ;;;I'm connecting in via an SSH type session. So, I'm only going to run them
 ;;;GUI mode.
@@ -98,7 +116,8 @@
 	    (require 'atomic-chrome)
 	    (atomic-chrome-start-server)
 	    )
-      )
+	)
+      (load-library "minimap")
       )
   ;;; else
   (progn
@@ -106,23 +125,6 @@
 ;;; end else
       )
 )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; In an effort for "one dot-emacs to rule them all," I'm creating a
-;;; variable called "clouddir-packages-available." The assumption is that
-;;; most systems will either be referencing the cloud directory on box
-;;; (or other provider as I see fit), or I'll be able to install packages
-;;; locally (and replicate dot.emacs as needed).
-;;;
-;;; sigfile and tempword need to be defined in the icb-functions.el, but I
-;;; would need to load that before the machine-specific test. I'm going to
-;;; try it at some point. 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar sigfile "~/.signature"
-  "Location and name of the signature file on the machine. Default is ~/.signature")
-
-(defvar tempword "~/tempword-markdown.docx"
-  "Location and name of a temporary file to dump conversion of markdown to word. Default is ~/tempword-markdown.docx")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;			    Default Values
@@ -136,7 +138,6 @@
 ;;;(setq ispell-program-name "hunspell")
 (setq ispell-program-name "aspell")
 (global-set-key (kbd "<f8>") 'flyspell-check-previous-highlighted-word)
-
 ;;; I don't want backup files.
 (setq make-backup-files nil)
 
@@ -221,27 +222,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Machine-Specific things for the GUI
       
-      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      ;;; Things for the WorkTop
-      (if (string= system-name "CPX-T3716HB1N83")
-	  (progn
-	    (print "It's the WorkTop!")
-;;;	    (set-face-attribute 'default nil :font "Cousine")
-;;;	    (set-face-attribute 'default nil :font "CourierPrime")
-;;;	    (set-face-attribute 'default nil :font "IBM Plex Mono")
-	    (set-face-attribute 'default (selected-frame) :height 120) ;;;Make the typeface a bit bigger (120%). 
-	    (setq machine-font "IBM Plex Mono")
-	    (set-background-color "#d6e5ff")	    
-      	    (setq ispell-program-name "hunspell")
-	    (cd "c:/Users/i.charles.barilleaux/box sync/")
-	    (setq sigfile "~/signature.txt")
-
-	    (setq tempword "c:\\users\\i.charles.barilleaux\\temp-markdown.docx")
-	    ;;; Lock Files were hurting OneDrive. Turning it off just on the
-	    ;;; WorkTop, as I'm not 100% sure of the implications. 
-	    (setq create-lockfiles nil)
-
-	    ))
+;;;The curl that ships with Windows is old, and doesn't work with SimpleNote2
+;;;so I downloaded a more recent version, and put it in the location specified
+;;;below (I'll add this to other Windows machines).
 
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;;; Things for the Virtual Windows System
@@ -255,13 +238,6 @@
       	    (setq ispell-program-name "hunspell")
 	    (cd "~")
 	    (setq sigfile "~/signature.txt")
-
-	    ;;; Lock Files were hurting OneDrive. Turning it off just on the
-	    ;;; WorkTop, as I'm not 100% sure of the implications. 
-;;;	    (setq create-lockfiles nil) ;;;commenint gout on TARS as it's not
-	                                ;;;the WorkTop. Plus I want to see
-	                                ;;;if it's a work issue or not.
-
 	    ))
       
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -272,24 +248,43 @@
 ;;; 	    (set-face-attribute 'default nil :font "Consolas")
 	    (set-background-color "#A9F5A9")
 	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (120%). 
-	    (setq ispell-program-name "hunspell")
+	    (setq machine-font "Liberation Mono")
 	    (setq tempword "~/box/documents/temp-markdown.docx")
+;;;	    (setq tempword-template "/home/chbarr/box/documents/pandoc-templates/template-2018-09-27.docx")
+	    (setq tempword-template "~/box/documents/pandoc-templates/template-2018-09-27.docx")
+
 	    ))
-      
-      ;;; Things for Kingswood (HP Omen)
-;;;      (if (string= system-name (or "kingswood" "KINGSWOODW"))
-      (if (or (string= system-name "kingswood") (string= system-name "KINGSWOODW"))
+
+;;; Things for New Macbook
+      (if (string= system-name "kingswood")
+
 	  (progn
-	    (print "It's Kingswood!")
-;;;	    (set-face-attribute 'default nil :font "Liberation Mono")
-;;;	    (Set-face-attribute 'default nil :font "Roboto Mono")
-	    (set-face-attribute 'default (selected-frame) :height 150) ;;;Make the typeface a bit bigger (150%).
-	    (setq machine-font "Roboto Mono")
+	    (print "It's Kingswood, the new Macbook Pro!")
+	    (set-face-attribute 'default (selected-frame) :height 155) ;;;Make the typeface a bit bigger (155%).
+	    (print "setting machine font")
+;;;    	    (setq machine-font "IBM Plex Mono")
+	    (setq machine-font "JetBrains Mono Medium")
+	    (print "set")
 	    (set-background-color "#fcf8e1")
-      	    (setq ispell-program-name "hunspell")
+      	    (setq ispell-program-name "/usr/local/bin/hunspell")
+	    ;;;Apparently, OS X does not pick up the path from the shell. I'm hardcoding it as a work around--hopefully just temporarily.
+	    (setenv "PATH" "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Users/chbarr/bin")
+
+;;;Binding commands to keys, to, in turn, put in the TouchBar
+	    ;;;Bind mdcopy to C-<f10>
+	    (global-set-key (kbd "C-<f10>") 'mdcopy)
+	    ;;;Bind tempword-buffer to C-S-<f10>
+	    (global-set-key (kbd "C-S-<f10>") 'tempword-buffer)	    
+	    ;;;Bind xkcd-copy to C-S-<f9>
+	    (global-set-key (kbd "C-S-<f9>") 'xkcd-it)
+	    ;;;Bind use-machine-font to M-C-S-<f9>
+	    (global-set-key (kbd "M-C-S-<f9>") 'use-machine-font)
 	    ))
+
 ;;; GUI stuff after machine stuff--probably based on items in the machine-specific sections
+      (print "set machine font here")
       (set-face-attribute 'default nil :font machine-font)
+
       )
 ;;; else 
 ;;; Things for terminal mode
@@ -303,20 +298,12 @@
 ;;; Machine-Specific terminal stuff
 
  	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	  ;;; kingswood
-	  (if (string= system-name "kingswood")
-	  (progn
-	    (print "Kingswood (HP Omen Laptop), in the Terminal")
-	    (setq ispell-program-name "hunspell")
-	    ))
-
- 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	  ;;; "squip"
 	  (if (string= system-name "squip")
 	  (progn
 	    (print "Squip (Raspberry Pi Utility System), in the Terminal")
-	    (setq ispell-program-name "hunspell")
       	    (setq tempword "~/box/documents/temp-markdown.docx")
+	    (setq tempword-template "/home/chbarr/box/documents/pandoc-templates/template-2018-09-27.docx") ;;;had to be absolute. who who knows?
 	    ))
 
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -338,7 +325,7 @@
 
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	  ;;; SDF, which doesn't support cloud drives.
-	  (if (member system-name '("sdf" "faeroes" "iceland" "miku" "norge" "otaku"))
+	  (if (member system-name '("sdf" "faeroes" "iceland" "miku" "norge" "otaku" "rie" "sverige"))
 	  (progn
 	    (print "A SDF Free UNIX server")
             ;;; This doesn't work with cloud drive, so swap the variable.
@@ -351,6 +338,23 @@
 	    (global-set-key [delete] 'delete-char)
 	    )
 	  )
+
+	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	  ;;; SDF MetaArray Server
+	  (if (string= system-name "ma.sdf.org")
+	  (progn
+	    (print "The SDF MetaArray server")
+            ;;; This doesn't work with cloud drive, so swap the variable.
+	    (setq clouddir-packages-available 'nil)
+	    (add-to-list 'load-path "~/emacs.d")
+	    ;;;My personal functions--copied locally
+	    (load-library "icb-functions")
+	    ;;;Change key binding so backspace and DEL work as expected.
+	    (global-set-key "\C-d" 'backward-delete-char-untabify)
+	    (global-set-key [delete] 'delete-char)
+	    )
+	  )
+
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	  ;;; Hashbang.sh
 	  (if (string= system-name "da1.hashbang.sh")
@@ -454,6 +458,8 @@
 ;;; HTML Mode
 (add-to-list 'auto-mode-alist '("\\.html\\'" . html-mode))
 
+;;; JaveScript Mode
+(add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Setting Up E-Mail
@@ -617,8 +623,43 @@
 ;;;            2. Set tempword variable for squip.
 ;;;            3. Got rid of SimpleNote. 
 ;;;2019-09-11: 1. Switching to the beta. This puts a test for cloud directories
-;;;               at the front. The goal is to allow some modules to load prior to
-;;;               machine tests. 
+;;;               at the front. The goal is to allow some modules to load prior
+;;;               to machine tests. 
+;;;2019-09-18: 1. Moved the variables used by icb-functions.el to the
+;;;               icb-functions.el file. Now, the only time they are set here
+;;;               is if they are different than the default. 
+;;;2019-09-19: 1. New SDF host, rie
+;;;2019-09-24: 1. Got the scoop on SimpleNote. Windows had an old version
+;;;               of curl. Updated it, and, for the WorkTop, set the
+;;;               request-curl variable.
+;;;            2. Added the simplenote2 stuff back in. 
+;;;2019-09-26: 1. Set Simplenote2 to default to Markdown for new notes. 
+;;;2019-10-01: 1. Added the SDF MetaARPA and MetaArray servers.
+;;;            2. Loading Nyan Mode, just 'cause.
+;;;2019-10-17: 1. For whatever reason, after upgrading squip to the latest
+;;;               OS version ("Buster"), hunspell doesn't work. Removed the
+;;;               lines and use the "default" of aspell. 
+;;;2019-11-02: 1. Added a test within the Kingswood section for the Windows
+;;;               boot. I still want the Linux and Windows sides to be similar,
+;;;               but there are a few must-dos in Windows.
+;;;            2. Resized KINGSWOODW's typeface size.
+;;;            3. Added pointer to KINGSWOODW's modern curl to make SimpeNote
+;;;               work. 
+;;;2019-11-09: 1. Removed the Accenture WorkTop
+;;;            2. New Kingswood typeface.
+;;;            3. New section for TBD-named MacBook Pro
+;;;2019-11-16: 1. I had to hard-code the path for the new MacBook.
+;;;            2. Mapped C-<F10> to mdcopy
+;;;2019-11-23: 1. Removed the HP Omen
+;;;            2. New MacBook has inhereted the "Kingswood" name. Huzah!
+;;;2019-11-25: 1. Added some (obscure) key bindings to kingswood, to, in turn
+;;;               map to touch bar keys. 
+;;;2020-01-16: 1. Set a new font for kingswood
+;;;2020-01-23: 1. Bound c-s-F10 to tempword-buffer for Kingswood (touch bar)
+;;;2020-02-08: 1. Loading the Minimap Mode
+;;;2020-05-05: 1. Set "js" to load javascript mode.
+;;;            2. Loading BASIC mode. Set BAS to load the mode, and set a few
+;;;               relavent variables.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;			     HOLDING ZONE
 ;;;
@@ -638,10 +679,10 @@
 ;;;Documentation
 ;;;(print "\tC-F8\tNeoTree file browser")
 
-;;;Set Up Simplenote2
-;;;      (require 'simplenote2)
-;;;      (setq simplenote2-email nil)
-;;;      (setq simplenote2-password nil)
-;;;      (setq simplenote2-markdown-notes-mode `markdown-mode)
-;;;      (simplenote2-setup)
-      
+;;;SimpleNote2 wasn't working on Windows. I had to download a version of Curl
+;;;("modern" as described in the email I received in an email) that would
+;;;work with it. As I removed my last windows box somewhere along the line, I
+;;;wanted to capture this. Basically, download the new version, stick it some-
+;;where, and point EMACS to it (request-curl).
+;;;Modern curl URL: l.mrguilt.com/curl4win
+;;;(setq request-curl "D:\\Windows Programs\\curl4win\\curl.exe")
