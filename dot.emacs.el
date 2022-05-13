@@ -18,7 +18,8 @@
 ;;;
 ;;; Remote Systems
 ;;; ------ -------
-;;; Google Cloud Server ("spectr" in DNS)="instance-4"
+;;; Oracle Cloud Server ("delphi" in DNS)="instance-20210621-1127"
+;;; SDF VPS Server="frankenlight"
 ;;; SDF Free UNIX="sdf", "faeroes", "iceland", "miku", "otaku", "rie", 
 ;;;               "sverige" and "norge" (round robin assignment at login
 ;;;               to tty.sdf.org)
@@ -41,7 +42,7 @@
 (print system-type)
 (print (concat "EMACS Version: " emacs-version))
 (print user-real-login-name)
-(print "dot.emacs.el file last updated 2020-05-05.")
+(print "dot.emacs.el file last updated 2021-07-13")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Test if cloud directories are avaialble.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -78,8 +79,8 @@
       
 ;;;My personal functions
       (load-library "icb-functions")
-      ;;; End True
-
+      (load-library "ref-page-functions")
+      
 ;;;Load basic-mode and configure
       (autoload 'basic-mode "basic-mode" "Major mode for editing BASIC code." t)
       (add-to-list 'auto-mode-alist '("\\.bas\\'" . basic-mode))
@@ -162,6 +163,7 @@
 ;;;don't want to see it. Like, ever.
 (setq inhibit-startup-screen t)
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Platform-specific check. These can be overwritten per machine if need
 ;;; be (for instance, if bash isn't at /bin/bash).
@@ -239,6 +241,51 @@
 	    (cd "~")
 	    (setq sigfile "~/signature.txt")
 	    ))
+
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      ;;; Things for the frankenlight, X11
+      (if (string= system-name "frankenlight")
+	  (progn
+	    (print "frankenlight, the SDF virtual machine, in X windows")
+	    (set-face-attribute 'default nil :font "Liberation Sans")
+	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (120%).
+	    (setq machine-font "Liberation Sans")
+	    (set-background-color "#d6e5ff")	    	    
+      	    (setq ispell-program-name "hunspell")
+	    (cd "~")
+	    (setq sigfile "~/signature.txt")
+	    (setq tempword "~/box/documents/temp-markdown-from-frankenlight.docx")
+	    ))
+
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      ;;; Things for the delphi, X11
+      (if (string= system-name "instance-20210621-1127")
+	  (progn
+	    (print "delphi, the Oracle Cloud virtual machine, in X windows")
+	    (set-face-attribute 'default nil :font "DejaVu Sans Mono")
+	    (set-face-attribute 'default (selected-frame) :height 120) ;;;Make the typeface a bit bigger (120%).
+	    (setq machine-font "DejaVu Sans Mono")
+	    (set-background-color "#d1fbff")
+      	    (setq ispell-program-name "hunspell")
+	    (cd "~")
+	    (setq sigfile "~/signature.txt")
+	    (setq tempword "~/box/documents/temp-markdown-from-frankenlight.docx")
+	    ))
+      
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      ;;; Things for the SDF MetaArray, X11
+      (if (string= system-name "mab")
+	  (progn
+	    (print "The SDF MetaArray, in X windows")
+	    (set-face-attribute 'default nil :font "Liberation Sans")
+	    (set-face-attribute 'default (selected-frame) :height 140) ;;;Make the typeface a bit bigger (120%).
+	    (setq machine-font "Liberation Sans")
+	    (set-background-color "#e8f7a3")	    	    
+      	    (setq ispell-program-name "ispell")
+	    (cd "~")
+	    (setq sigfile "~/signature.txt")
+	    (setq tempword "~/cloudsync/sdfdocs/temp-markdown.docx")
+	    ))
       
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       ;;; Things for the Raspberry Pi (squip)
@@ -269,10 +316,11 @@
       	    (setq ispell-program-name "/usr/local/bin/hunspell")
 	    ;;;Apparently, OS X does not pick up the path from the shell. I'm hardcoding it as a work around--hopefully just temporarily.
 	    (setenv "PATH" "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Users/chbarr/bin")
+	    (setq tempword "~/documents/temp-markdown.docx")
+	    ;;;Point to GPG Program
+	    (custom-set-variables '(epg-gpg-program  "/usr/local/bin/gpg"))
 
 ;;;Binding commands to keys, to, in turn, put in the TouchBar
-	    ;;;Bind mdcopy to C-<f10>
-	    (global-set-key (kbd "C-<f10>") 'mdcopy)
 	    ;;;Bind tempword-buffer to C-S-<f10>
 	    (global-set-key (kbd "C-S-<f10>") 'tempword-buffer)	    
 	    ;;;Bind xkcd-copy to C-S-<f9>
@@ -305,12 +353,20 @@
       	    (setq tempword "~/box/documents/temp-markdown.docx")
 	    (setq tempword-template "/home/chbarr/box/documents/pandoc-templates/template-2018-09-27.docx") ;;;had to be absolute. who who knows?
 	    ))
-
+	  
 	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	  ;;; spectr
-	  (if (string= system-name "instance-4")
+	  (if (string= system-name "instance-20210621-1127")
 	  (progn
-	    (print "Google Cloud system (specr.mrguilt.com).")
+	    (print "Oracle Cloud system (delphi.mrguilt.com).")
+
+	    ))
+
+	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	  ;;; frankenlight
+	  (if (string= system-name "frankenlight")
+	  (progn
+	    (print "frankenlight, the SDF VPS system")
 
 	    ))
 
@@ -660,6 +716,18 @@
 ;;;2020-05-05: 1. Set "js" to load javascript mode.
 ;;;            2. Loading BASIC mode. Set BAS to load the mode, and set a few
 ;;;               relavent variables.
+;;;2020-09-19: 1. Removed binding for `mdcopy`--I found a better way for
+;;;               doing the touchbar. 
+;;;2020-09-24: 1. Added entry for frankenlight
+;;;2020-10-16: 1. Added variable to support GPG on Kingswood.
+;;;2020-12-20: 1. Changed the color for frankenlight/GUI
+;;;2020-12-29: 1. Added section for SDF MetaArray in X11
+;;;2021-01-02: 1. Set tempword file for MetaArray
+;;;2021-01-03: 1. Fixed iSpell for MetaArray
+;;;            2. Set tempword file for frankenlight
+;;;2021-04-02: 1. Called the new ref-page-functions library
+;;;2021-06-22: 1. Swapped spectr for delphi
+;;;2021-07-13  1. Added section for delphi
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;			     HOLDING ZONE
 ;;;
